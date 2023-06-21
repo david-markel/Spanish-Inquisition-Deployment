@@ -1,0 +1,6 @@
+**/data/
+__pycache__/
+**/__pycache__/
+**/node_modules/
+backend/app/
+.python-version.DS_Store

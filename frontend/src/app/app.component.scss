@@ -1,0 +1,26 @@
+.joinOrCreateMain {
+    display: flex;
+    justify-content: center;
+    position: relative; 
+    z-index: 0;
+  }
+  
+  .logo {
+    height: 245px;
+  }
+  
+  .overlay {
+    position: absolute; 
+    z-index: 1;
+    width: 100%; 
+    height: 100%; 
+  }
+
+  .logoContainer {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  
+  

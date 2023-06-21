@@ -1,0 +1,28 @@
+<div class="joinOrCreate">
+  <div *ngIf="mode === 'student'" class="container">
+    <label for="game-code" class="myLabel">Game Code</label>
+    <input type="text" name="game-code" id="game-code" class="myInput" [(ngModel)]="gameCode">
+    <button
+      mat-raised-button
+      class="myButton"
+      (click)="onJoin()"
+      style="color: white; background-color: black;"
+    >
+      Join
+    </button>
+  </div>
+  <div *ngIf="mode === 'teacher'" style="text-align: center;">
+    <label style="font-weight: bold;" class="myLabel">Your Quizzes</label>
+    <div class="quiz-col">
+      <div *ngFor="let q of quizzes" class="quiz-row">
+        <p>{{ q.title }}</p>
+        <div class="button-row">
+          <button (click)="onEdit(q.id)" class="myButton">Edit</button>
+          <button (click)="onStart(q.id)" class="myButton green-button">Start</button>
+        </div>
+      </div>
+    </div>
+    <button (click)="onCreateOrEditQuiz()" class="myButton" mat-raised-button style="color: white; background-color: black;">Create New Quiz</button>
+  </div>
+  <app-error-message [error]="error" />
+</div>

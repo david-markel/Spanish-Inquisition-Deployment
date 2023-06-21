@@ -1,0 +1,15 @@
+.error-container-outer {
+    background-color: white;
+    border-radius: 15px;
+}
+
+.error-container {
+    background-color: rgba(255, 0, 0, 0.3);
+    color: red;
+    font-weight: bold;
+    font-size: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+    border-radius: 15px;
+    padding: 1rem;
+}

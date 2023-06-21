@@ -1,0 +1,52 @@
+<div class="imageAlignment ">
+    <mat-card>
+      <mat-card-content>
+          <h1>Create User</h1>
+          <hr />
+          <form>
+            <div >
+              <mat-form-field>
+                <mat-label>User Type</mat-label>
+                <mat-select (selectionChange)="onUserTypeChange($event)">
+                  <mat-option *ngFor="let userType of userTypes" [value]="userType">
+                    {{userType}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="row">
+              <div>
+                <label for="firstName" class="labels">First name</label>
+                <br/>
+                <input type="text" class="form-control" id="firstName" [(ngModel)]="firstName" name="firstName">
+              </div>
+              <div>
+                <label for="lastName" class="labels">Last Name</label>
+                <br/>
+                <input type="text" class="form-control" id="lastName" [(ngModel)]="lastName" name="lastName">
+              </div>
+            </div>
+            <br />
+            <div class="row">
+              <div>
+                <label for="username" class="labels">User Name</label>
+                <br/>
+                <input type="text" class="form-control" id="username" [(ngModel)]="username" name="username">
+              </div>
+              <div>
+                <label for="password" class="labels">Password</label>
+                <br/>
+                <input type="password" class="form-control" id="password" [(ngModel)]="password" name="password">
+              </div>
+            </div>
+            <br />
+            <div class="buttons">
+              <button (click)="onCancel()" class="btn btn-primary" >Cancel</button>
+              <button (click)="onCreateUser()" class="btn btn-primary" >Create User</button>
+            </div>
+            <app-error-message [error]="error" />
+          </form>
+      </mat-card-content>
+  </mat-card>
+  </div>
+  

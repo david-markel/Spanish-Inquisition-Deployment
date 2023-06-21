@@ -1,0 +1,40 @@
+<div class="logInBox">
+  <mat-card>
+    <mat-card-content>
+      <h1>User Login</h1>
+      <form>
+        <div>
+          <label for="username" class="labels">Username</label>
+          <br />
+          <input
+            type="text"
+            class="form-control"
+            id="username"
+            [(ngModel)]="username"
+            name="username"
+          />
+        </div>
+        <br />
+        <div>
+          <label for="password" class="labels">Password</label>
+          <br />
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+          />
+        </div>
+        <br />
+        <div>
+          <button (click)="onLogin()" class="btn btn-primary">Login</button>
+          <button (click)="onCreateUser()" class="btn btn-primary">
+            Create User
+          </button>
+        </div>
+        <app-error-message [error]="error"></app-error-message>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

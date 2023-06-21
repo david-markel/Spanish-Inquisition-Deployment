@@ -1,0 +1,41 @@
+<div class="imageAlignment ">
+    <mat-card>
+      <mat-card-content>
+          <h1 *ngIf="quizId == 0">Create Quiz</h1>
+          <h1 *ngIf="quizId != 0">Edit Quiz</h1>
+          <hr />
+          <form>
+            <div class="row">
+              <div>
+                <label for="title" class="labels">Title</label>
+                <br/>
+                <input type="text" class="form-control" id="title" [(ngModel)]="title" name="title">
+              </div>
+              <div class="col">
+                <button (click)="onSaveTitle()" class="btn btn-primary" style="width: 7em;">Save Title</button>
+                <button (click)="onDeleteQuizClicked()" class="btn btn-danger" style="width: 7em;">Delete Quiz</button>
+              </div>
+            </div>
+            <div *ngIf="quizCreated">
+              <hr />
+              <div class="row" *ngFor="let question of questions">
+                <app-create-edit-question 
+                  [question]="question" 
+                  (onQuesetionChanged)="handleQuestionChanged($event)" 
+                  (onQuestionDeleted)="handleQuestionDeleted($event)"
+                />
+              </div>
+              <button (click)="onAddQuestion()" class="btn btn-primary" style="width: 7em;">Add Question</button>
+            </div>
+            <br/>
+            <br/>
+            <div class="buttons">
+              <button (click)="onCancel()" class="btn btn-primary" >Cancel</button>
+              <button (click)="onSaveQuiz()" class="btn btn-primary" >Save Quiz</button>
+            </div>
+            <app-error-message [error]="error" />
+          </form>
+      </mat-card-content>
+  </mat-card>
+  </div>
+  

@@ -1,0 +1,132 @@
+<div class="screen-container">
+    <div class="container">
+        <div *ngIf="state === 'error'">
+            <app-error-message [error]="error" />
+            <div class="go-back-container">
+                Go back to try joining another game.
+                <button
+                    (click)="onGoBack()"
+                    class="myButton"
+                    mat-raised-button
+                >
+                    Go Back
+                </button>
+            </div>
+        </div>
+        <div *ngIf="state === 'joining'" class="centered-flex billboard">
+            connecting to game...
+        </div>
+        <div *ngIf="state === 'start_wait'" class="centered-flex billboard">
+            connected to game! waiting for teacher to start.
+        </div>
+        <div *ngIf="state === 'results_wait'" class="centered-flex billboard">
+            Already submitted! Waiting for the question to end...
+        </div>
+        <div *ngIf="state === 'prompt'" class="centered-flex billboard">
+            question prompt is live!
+        </div>
+        <div *ngIf="state === 'choices'" class="four-grid">
+            <button class="choice blue-choice" (click)="onChoice('a')">A</button>
+            <button class="choice red-choice" (click)="onChoice('b')">B</button>
+            <button class="choice green-choice" (click)="onChoice('c')">C</button>
+            <button class="choice yellow-choice" (click)="onChoice('d')">D</button>
+        </div>
+        <div *ngIf="state === 'question_results'" class="centered-flex billboard">
+            <div *ngIf="wasCorrect" class="centered-flex billboard">
+                <p class="huge green">CORRECT!</p>
+                <p>+{{ lastPoints.toFixed(2) }} points ({{ totalPoints.toFixed(2) }} total)</p>
+            </div>
+            <div *ngIf="!wasCorrect" class="centered-flex billboard">
+                <p class="huge red">Incorrect...</p>
+                <p>You have {{ totalPoints.toFixed(2) }} points.</p>
+            </div>
+        </div>
+        <div *ngIf="state === 'overall_results'" class="centered-flex billboard">
+            overall results are live!
+        </div>
+    </div>
+</div>
+
+<div *ngIf="DEBUG">
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                connecting to game...
+            </div>
+            
+        </div>
+    </div>
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                connected to game! waiting for teacher to start.
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                Already submitted! Waiting for the question to end...
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                question prompt is live!
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="four-grid">
+                <button class="choice blue-choice" (click)="onChoice('a')">A</button>
+                <button class="choice red-choice" (click)="onChoice('b')">B</button>
+                <button class="choice green-choice" (click)="onChoice('c')">C</button>
+                <button class="choice yellow-choice" (click)="onChoice('d')">D</button>
+            </div>
+        </div>
+    </div>
+
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                <div class="centered-flex billboard">
+                    <p class="huge red">Incorrect...</p>
+                    <p>You have {{ totalPoints.toFixed(2) }} points.</p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                <div class="centered-flex billboard">
+                    <p class="huge green">CORRECT!</p>
+                    <p>+{{ lastPoints.toFixed(2) }} points ({{ totalPoints.toFixed(2) }} total)</p>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <br>
+    <div class="screen-container">
+        <div class="container">
+            <div class="centered-flex billboard">
+                overall results are live!
+            </div>
+        </div>
+    </div>
+</div>

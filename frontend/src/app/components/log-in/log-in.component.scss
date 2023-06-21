@@ -1,0 +1,26 @@
+.btn-primary {
+    background-color: black;
+    border: black;
+    color: white;
+    margin: 10px;
+    width: 100px;
+}
+
+.labels {
+    float: left;
+    font-weight: bold;
+}
+
+h1 {
+    font-weight: bold;
+}
+
+mat-card {
+    width : 25vw;
+    min-width: 300px;
+    margin: 2em auto;
+    text-align: center;
+    max-height: 600px;
+    border: 2px solid black;
+    border-radius: 25px;
+}

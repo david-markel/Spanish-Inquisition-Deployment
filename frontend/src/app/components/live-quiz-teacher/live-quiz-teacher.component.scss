@@ -1,0 +1,52 @@
+.student-grid {
+    display: grid;
+    gap: 10px;
+    grid-auto-rows: minmax(100px, auto);
+    overflow-y: scroll;
+    height: 45vh;
+    grid-template-columns: repeat(3, 1fr);
+    flex-grow: 0;
+}
+
+.student-capsule {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-radius: 100%;
+    border: 1px solid black;
+    /*width: 100px;*/
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 100px;
+    color: blue;
+    margin-right: auto;
+    margin-left: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.leaderboard {
+    display: flex; 
+    flex-flow: column; 
+    font-size: 2rem; 
+    font-weight: bold;
+}
+
+.prompt {
+    font-size: 4.5rem;
+    text-align: center;
+}
+
+.four-grid {
+    margin-top: 35px !important;
+    gap: 15px;
+}
+
+.choices-wrapper {
+    position: relative; 
+    width: 100%; 
+    height: calc(100% - 35px);
+}

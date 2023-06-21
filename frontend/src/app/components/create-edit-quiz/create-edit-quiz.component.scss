@@ -1,0 +1,62 @@
+h1 {
+    font-weight: bold;
+}
+
+mat-card {
+    overflow-y: scroll;
+    height: fit-content;
+    max-height: 90vh;
+    width : 75vw;
+    min-width: 300px;
+    margin: 2em auto;
+    border: 2px solid black;
+    border-radius: 25px;
+}
+
+label {
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: black;
+    border: black;
+    color: white;
+    margin: 10px;
+    width: 100px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+    /*position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;*/
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+.row > div {
+    width: 48%; 
+    min-width: 290px;
+}
+
+.col {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.error {
+    background-color: rgba(255, 0, 0, 0.3);
+    color: red;
+    font-weight: bold;
+    font-size: 2rem;
+    text-align: center;
+    margin-top: 2rem;
+    border-radius: 15px;
+}

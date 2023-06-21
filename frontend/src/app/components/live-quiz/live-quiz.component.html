@@ -1,0 +1,10 @@
+<div class="quiz-container">
+    <img class="torch torch-left" src="../assets/torch.gif" />
+    <div *ngIf="mode === 'student'">
+        <app-live-quiz-student [joinCode]="joinCode!" />
+    </div>
+    <div *ngIf="mode === 'teacher' && quizId">
+        <app-live-quiz-teacher [quizId]="quizId"></app-live-quiz-teacher>
+    </div>
+    <img class="torch torch-right" src="../assets/torch.gif" />
+</div>
