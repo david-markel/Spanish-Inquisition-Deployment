@@ -80,18 +80,7 @@ class QuizViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        """
-        Optionally restricts the returned questions to a given quiz,
-        by filtering against a `quiz` query parameter in the URL.
-        """
-        queryset = Question.objects.all()
-        quiz_id = self.request.query_params.get('quiz', None)
-        if quiz_id is not None:
-            queryset = queryset.filter(quiz__id=quiz_id)
-        return queryset
 
     def perform_create(self, serializer):
-        serializer.save(quiz=self.request.user.quizzes.get(pk=self.request.data['quiz']))
+        serializer.save()
+

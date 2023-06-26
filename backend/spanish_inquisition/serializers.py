@@ -27,21 +27,24 @@ class QuestionSerializer(serializers.ModelSerializer):
     correctChoice = serializers.CharField(source='correct_choice')
     promptDisplayTime = serializers.IntegerField(source='prompt_display_time')
     timeLimit = serializers.IntegerField(source='time_limit')
-    quizId = serializers.IntegerField(source='quiz.id', read_only=True)
+    quizId = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Question
-        fields = ['id', 'prompt', 'choiceA', 'choiceB', 'choiceC', 'choiceD', 'correctChoice', 'promptDisplayTime', 'timeLimit', 'quiz', 'sequence', 'quizId']
-        extra_kwargs = {
-            'quiz': {'write_only': True}
-        }
-
+        fields = ['id', 'prompt', 'choiceA', 'choiceB', 'choiceC', 'choiceD', 'correctChoice', 'promptDisplayTime', 'timeLimit', 'quizId', 'sequence']
+        
     def create(self, validated_data):
+        quiz_id = validated_data.pop('quizId')
+        quiz = Quiz.objects.get(id=quiz_id)
+        validated_data['quiz'] = quiz
         validated_data['correct_choice'] = validated_data.pop('correct_choice')
         validated_data['prompt_display_time'] = validated_data.pop('prompt_display_time')
         validated_data['time_limit'] = validated_data.pop('time_limit')
         question = Question.objects.create(**validated_data)
         return question
+
+
+
 
 
 
