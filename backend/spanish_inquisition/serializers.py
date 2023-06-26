@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Quiz, CustomUser
+from .models import Quiz, CustomUser, Question
 
 User = get_user_model()
 
@@ -22,3 +22,28 @@ class QuizSerializer(serializers.ModelSerializer):
         model = Quiz
         fields = ['id', 'title', 'is_active', 'join_code', 'owning_teacher', 'first_place', 'second_place', 'third_place']
         extra_kwargs = {'owning_teacher': {'required': False}}
+
+class QuestionSerializer(serializers.ModelSerializer):
+    correctChoice = serializers.CharField(source='correct_choice')
+    promptDisplayTime = serializers.IntegerField(source='prompt_display_time')
+    timeLimit = serializers.IntegerField(source='time_limit')
+    quizId = serializers.IntegerField(source='quiz.id', read_only=True)
+
+    class Meta:
+        model = Question
+        fields = ['id', 'prompt', 'choiceA', 'choiceB', 'choiceC', 'choiceD', 'correctChoice', 'promptDisplayTime', 'timeLimit', 'quiz', 'sequence', 'quizId']
+        extra_kwargs = {
+            'quiz': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        validated_data['correct_choice'] = validated_data.pop('correct_choice')
+        validated_data['prompt_display_time'] = validated_data.pop('prompt_display_time')
+        validated_data['time_limit'] = validated_data.pop('time_limit')
+        question = Question.objects.create(**validated_data)
+        return question
+
+
+
+
+

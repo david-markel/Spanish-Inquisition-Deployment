@@ -11,6 +11,10 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from .authentication import JWTAuthentication
 from rest_framework import viewsets
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from .models import Question
+from .serializers import QuestionSerializer
 
 
 @csrf_exempt
@@ -71,3 +75,23 @@ class QuizViewSet(viewsets.ModelViewSet):
             return Quiz.objects.filter(owning_teacher=self.request.user)
         else:
             return Quiz.objects.none()
+    
+
+class QuestionViewSet(viewsets.ModelViewSet):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned questions to a given quiz,
+        by filtering against a `quiz` query parameter in the URL.
+        """
+        queryset = Question.objects.all()
+        quiz_id = self.request.query_params.get('quiz', None)
+        if quiz_id is not None:
+            queryset = queryset.filter(quiz__id=quiz_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(quiz=self.request.user.quizzes.get(pk=self.request.data['quiz']))
