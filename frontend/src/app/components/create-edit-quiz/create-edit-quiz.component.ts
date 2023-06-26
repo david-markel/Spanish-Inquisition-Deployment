@@ -7,7 +7,7 @@ export type EditingQuestion = Question & { isNew: boolean };
 @Component({
   selector: 'app-create-edit-quiz',
   templateUrl: './create-edit-quiz.component.html',
-  styleUrls: ['./create-edit-quiz.component.scss']
+  styleUrls: ['./create-edit-quiz.component.scss'],
 })
 export class CreateEditQuizComponent {
   quizCreated: boolean;
@@ -21,43 +21,51 @@ export class CreateEditQuizComponent {
 
   isNew: boolean;
 
-  answerChoices = ["a", "b", "c", "d"];
+  answerChoices = ['a', 'b', 'c', 'd'];
 
-  constructor(private router: Router, private route: ActivatedRoute, private apiService: ApiService) {
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private apiService: ApiService
+  ) {
     this.quizCreated = false;
 
-    this.token = "";
+    this.token = '';
     this.quizId = 0;
-    this.title = "";
+    this.title = '';
     this.questions = [];
     this.error = null;
 
-    const raw = this.route.snapshot.paramMap.get("id");
+    const raw = this.route.snapshot.paramMap.get('id');
 
     if (raw) {
       this.quizId = parseInt(raw);
       this.isNew = false;
-    }
-    else {
+    } else {
       this.isNew = true;
     }
   }
 
   async ngOnInit() {
-    const maybeToken = sessionStorage.getItem("token");
-    if (maybeToken)
+    const maybeToken = sessionStorage.getItem('token');
+
+    if (maybeToken) {
       this.token = maybeToken;
+      console.log('Found token: ', this.token);
+    }
 
     if (!this.isNew) {
-      const { ok, err } = await this.apiService.getQuiz(this.token, this.quizId);
+      const { ok, err } = await this.apiService.getQuiz(
+        this.token,
+        this.quizId
+      );
 
       if (err) {
         this.error = err;
-      }
-      else if (ok) {
+      } else if (ok) {
         this.title = ok.title;
         this.quizCreated = true;
-        this.questions = ok.questions.map(q => ({ ...q, isNew: false }));
+        this.questions = ok.questions.map((q) => ({ ...q, isNew: false }));
       }
     }
   }
@@ -67,8 +75,15 @@ export class CreateEditQuizComponent {
   }
 
   validateQuestionInputs() {
-    for(let i = 0; i < this.questions.length; i++) {
-      if(this.questions[i].prompt.length == 0 || this.questions[i].choiceA.length == 0 || this.questions[i].choiceB.length == 0 || this.questions[i].correctChoice.length == 0 || this.questions[i].promptDisplayTime == 0 || this.questions[i].timeLimit == 0) {
+    for (let i = 0; i < this.questions.length; i++) {
+      if (
+        this.questions[i].prompt.length == 0 ||
+        this.questions[i].choiceA.length == 0 ||
+        this.questions[i].choiceB.length == 0 ||
+        this.questions[i].correctChoice.length == 0 ||
+        this.questions[i].promptDisplayTime == 0 ||
+        this.questions[i].timeLimit == 0
+      ) {
         return false;
       }
     }
@@ -77,16 +92,21 @@ export class CreateEditQuizComponent {
   }
 
   async onSaveTitle() {
-    if (this.title == "") {
-      this.error = "please enter a title!";
+    if (this.title == '') {
+      this.error = 'please enter a title!';
       return;
     }
 
     let res;
-    if (this.isNew)
+    if (this.isNew) {
+      console.log('Found token in save title : ', this.token);
       res = await this.apiService.createQuiz(this.token, this.title);
-    else
-    res = await this.apiService.updateQuiz(this.token, this.quizId, this.title);
+    } else
+      res = await this.apiService.updateQuiz(
+        this.token,
+        this.quizId,
+        this.title
+      );
 
     if (res.ok) {
       console.log(res.ok);
@@ -99,18 +119,23 @@ export class CreateEditQuizComponent {
 
   async onSaveQuiz() {
     if (!this.validateQuestionInputs()) {
-      this.error = "please complete all fields!";
+      this.error = 'please complete all fields!';
       return;
     }
 
     let success = true;
     for (const question of this.questions) {
       let res;
-      if (question.isNew)
+      if (question.isNew) {
+        console.log('Found token in save quiz : ', this.token);
         res = await this.apiService.createQuestion(this.token, question);
-      else {
+      } else {
         const toSave = { ...question, isNew: undefined, id: undefined };
-        res = await this.apiService.updateQuestion(this.token, question.id, toSave);
+        res = await this.apiService.updateQuestion(
+          this.token,
+          question.id,
+          toSave
+        );
       }
 
       if (res.ok) {
@@ -122,8 +147,7 @@ export class CreateEditQuizComponent {
       }
     }
 
-    if (success)
-      this.router.navigate(["/join-or-create"]);
+    if (success) this.router.navigate(['/join-or-create']);
   }
 
   onAddQuestion() {
@@ -157,23 +181,25 @@ export class CreateEditQuizComponent {
 
     if (err) {
       this.error += err;
-    }
-    else {
-      this.router.navigate(["/join-or-create"]);
+    } else {
+      this.router.navigate(['/join-or-create']);
     }
   }
 
   handleQuestionChanged(question: any) {
-    const idx = this.questions.findIndex(q => q.id === question.id);
+    const idx = this.questions.findIndex((q) => q.id === question.id);
     this.questions[idx] = question;
   }
 
   async handleQuestionDeleted(question: any) {
-    const idx = this.questions.findIndex(q => q.id === question.id);
+    const idx = this.questions.findIndex((q) => q.id === question.id);
 
     // hit the API if it's not a new question first
     if (!question.isNew) {
-      const { err } = await this.apiService.deleteQuestion(this.token, question.id);
+      const { err } = await this.apiService.deleteQuestion(
+        this.token,
+        question.id
+      );
 
       if (err) {
         this.error = err;

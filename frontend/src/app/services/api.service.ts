@@ -93,11 +93,8 @@ export class ApiService {
       }
 
       if (method === 'POST' || method == 'PUT')
-        res = await axiosFuncTable[method](
-          `${BASE_URL}${url}`,
-          data,
-          config
-        ); // takes a payload
+        res = await axiosFuncTable[method](`${BASE_URL}${url}`, data, config);
+      // takes a payload
       else res = await axiosFuncTable[method](`${BASE_URL}${url}`, config); // no payload
 
       return {
@@ -121,7 +118,7 @@ export class ApiService {
   }
 
   async register(newUser: NewUser): Promise<Response<User>> {
-    return await this.requestBase<NewUser, User>('POST', '/auth/register', {
+    return await this.requestBase<NewUser, User>('POST', '/auth/register/', {
       data: newUser,
     });
   }
@@ -129,13 +126,13 @@ export class ApiService {
   async login(username: string, password: string): Promise<Response<User>> {
     return await this.requestBase<{ username: string; password: string }, User>(
       'POST',
-      '/auth/login',
+      '/auth/login/',
       { data: { username, password } }
     );
   }
 
   async allQuizzes(token: string): Promise<Response<Quiz[]>> {
-    return await this.requestBase<void, Quiz[]>('GET', '/quizzes', { token });
+    return await this.requestBase<void, Quiz[]>('GET', '/quizzes/', { token });
   }
 
   async getQuiz(token: string, id: number): Promise<Response<Quiz>> {
@@ -145,10 +142,14 @@ export class ApiService {
   }
 
   async createQuiz(token: string, title: string): Promise<Response<Quiz>> {
-    return await this.requestBase<{ title: string }, Quiz>('POST', '/quizzes', {
-      data: { title },
-      token,
-    });
+    return await this.requestBase<{ title: string }, Quiz>(
+      'POST',
+      '/quizzes/',
+      {
+        data: { title },
+        token,
+      }
+    );
   }
 
   async updateQuiz(
@@ -158,19 +159,19 @@ export class ApiService {
   ): Promise<Response<Quiz>> {
     return await this.requestBase<{ title: string }, Quiz>(
       'PUT',
-      `/quizzes/${id}`,
+      `/quizzes/${id}/`,
       { data: { title }, token }
     );
   }
 
   async deleteQuiz(token: string, id: number): Promise<Response<Quiz>> {
-    return await this.requestBase<void, Quiz>('DELETE', `/quizzes/${id}`, {
+    return await this.requestBase<void, Quiz>('DELETE', `/quizzes/${id}/`, {
       token,
     });
   }
 
   async singleQuestion(token: string, id: number): Promise<Response<Question>> {
-    return await this.requestBase<void, Question>('GET', `/questions/${id}`, {
+    return await this.requestBase<void, Question>('GET', `/questions/${id}/`, {
       token,
     });
   }
@@ -179,10 +180,14 @@ export class ApiService {
     token: string,
     question: NewQuestion
   ): Promise<Response<Question>> {
-    return await this.requestBase<NewQuestion, Question>('POST', '/questions', {
-      data: question,
-      token,
-    });
+    return await this.requestBase<NewQuestion, Question>(
+      'POST',
+      '/questions/',
+      {
+        data: question,
+        token,
+      }
+    );
   }
 
   async updateQuestion(

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from .models import Quiz, CustomUser
 
 User = get_user_model()
 
@@ -15,3 +16,9 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+class QuizSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ['id', 'title', 'is_active', 'join_code', 'owning_teacher', 'first_place', 'second_place', 'third_place']
+        extra_kwargs = {'owning_teacher': {'required': False}}
