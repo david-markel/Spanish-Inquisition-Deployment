@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'spanish_inquisition',
+    'channels',
 ]
 
 REST_FRAMEWORK = {
@@ -136,3 +137,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 AUTH_USER_MODEL = 'spanish_inquisition.CustomUser'
+ASGI_APPLICATION = "spanish_inquisition.routing.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
