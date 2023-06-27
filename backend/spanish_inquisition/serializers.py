@@ -17,11 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-class QuizSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Quiz
-        fields = ['id', 'title', 'is_active', 'join_code', 'owning_teacher', 'first_place', 'second_place', 'third_place']
-        extra_kwargs = {'owning_teacher': {'required': False}}
+
 
 class QuestionSerializer(serializers.ModelSerializer):
     correctChoice = serializers.CharField(source='correct_choice')
@@ -45,6 +41,13 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 
+class QuizSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Quiz
+        fields = ['id', 'title', 'is_active', 'join_code', 'owning_teacher', 'first_place', 'second_place', 'third_place', 'questions']
+        extra_kwargs = {'owning_teacher': {'required': False}}
 
 
 

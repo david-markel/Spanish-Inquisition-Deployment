@@ -51,7 +51,6 @@ export class CreateEditQuizComponent {
 
     if (maybeToken) {
       this.token = maybeToken;
-      console.log('Found token: ', this.token);
     }
 
     if (!this.isNew) {
