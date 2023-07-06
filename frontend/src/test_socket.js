@@ -5,7 +5,14 @@ const socket = new WebSocket("ws://127.0.0.1:8000/ws/quiz/");
 socket.on("open", function open() {
   console.log("[open] Connection established!");
   console.log("Sending a test message to server");
-  socket.send("Test message from client");
+
+  // Create a message as a JavaScript object
+  const message = {
+    message: "Test message from client",
+  };
+
+  // Convert the message object into a JSON-formatted string and send it
+  socket.send(JSON.stringify(message));
 });
 
 socket.on("message", function incoming(data) {
