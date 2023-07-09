@@ -7,7 +7,6 @@ class JWTAuthentication(authentication.BaseAuthentication):
         # If request is a string, then it's assumed to be a token
         if isinstance(request, str):
             raw_token = request
-            print("Im a token!", raw_token)
 
             # validate the token
             validated_token = UntypedToken(raw_token)
@@ -22,8 +21,8 @@ class JWTAuthentication(authentication.BaseAuthentication):
             header = authentication.get_authorization_header(request).split()
             if len(header) == 2 and header[0].lower() == b'bearer':
                 raw_token = header[1]
-                print("raw token: ", raw_token)
+                # print("raw token: ", raw_token)
                 validated_token = UntypedToken(raw_token)
-                print("Validated token", validated_token)
+                # print("Validated token", validated_token)
                 return CustomUser.objects.get(id=validated_token['user_id']), None  # change User to CustomUser
             return None  # authentication did not succeed
