@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(serializers.ModelSerializer):
-    correctChoice = serializers.CharField(source='correct_choice')
+    correctChoice = serializers.ChoiceField(choices=Question.CHOICE, source='correct_choice')
     promptDisplayTime = serializers.IntegerField(source='prompt_display_time')
     timeLimit = serializers.IntegerField(source='time_limit')
     quizId = serializers.IntegerField(write_only=True)
@@ -33,11 +33,9 @@ class QuestionSerializer(serializers.ModelSerializer):
         quiz_id = validated_data.pop('quizId')
         quiz = Quiz.objects.get(id=quiz_id)
         validated_data['quiz'] = quiz
-        validated_data['correct_choice'] = validated_data.pop('correct_choice')
-        validated_data['prompt_display_time'] = validated_data.pop('prompt_display_time')
-        validated_data['time_limit'] = validated_data.pop('time_limit')
         question = Question.objects.create(**validated_data)
         return question
+
 
 
 

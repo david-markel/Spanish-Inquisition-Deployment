@@ -1,175 +1,213 @@
 <div class="screen-container">
-    <audio autoplay loop src="https://www.chosic.com/wp-content/uploads/2021/12/Gjallar.mp3"></audio>
-    <div class="container">
-        <div *ngIf="state === 'error'">
-            <app-error-message [error]="error" />
-        </div>
-        <div *ngIf="state === 'joining'" class="centered-flex billboard">
-            <p>connecting to quiz {{ quizId }}...</p>
-        </div>
-        <div *ngIf="state === 'start_wait'" class="centered-flex billboard">
-            <p>about to start <strong style="font-size: 2rem;">{{ quiz!.title }}</strong></p>
-            <p>to join: <strong style="font-size: 2rem;">{{ quiz!.joinCode }}</strong></p>
-            <p>{{ students.length }} Connected Students: </p>
-            <div class="student-grid">
-                <span *ngFor="let s of students" class="student-capsule">
-                    {{ s.username }}
-                </span>
-            </div>
-            <div>
-                <button class="myButton" mat-raised-button (click)="onStart()">Start Game</button>
-            </div>
-        </div>
-        <div *ngIf="state === 'prompt'" class="centered-flex billboard" style="position: relative;">
-            <app-timer [max]="timerMax" style="position: absolute; top:0; left: 0; right: 0;"/>
-            <p class="prompt">{{ currentQuestion?.prompt }}</p>
-        </div>
-        <div *ngIf="state === 'choices'" class="choices-wrapper">
-                <app-timer [max]="timerMax" />
-                <div class="four-grid billboard" style="margin-top: 30px;">
-                    <div class="choice blue-choice">A. {{ currentQuestion?.choiceA }}</div>
-                    <div class="choice red-choice">B. {{ currentQuestion?.choiceB }}</div>
-                    <div class="choice green-choice">C. {{ currentQuestion?.choiceC }}</div>
-                    <div class="choice yellow-choice">D. {{ currentQuestion?.choiceD }}</div>
-                </div>
-            </div>
-        <div *ngIf="state === 'question_results'" class="centered-flex billboard">
-            <div *ngIf="topLast.length > 0">
-                top riser on last question: {{ topLast[0].username }} (+{{ topLast[0].lastPoints?.toFixed(2) }})
-            </div>
-            <h2>Leaderboard</h2>
-            <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
-                <div *ngIf="i < topAll.length">{{ i + 1 }}. {{ topAll[i].username }} ({{ topAll[i].score?.toFixed(2) }})</div>
-            </div>
-            <button
-                class="myButton"
-                mat-raised-button
-                (click)="onNext()" 
-            >
-                Next Question
-            </button>
-        </div>
-        <div *ngIf="state === 'overall_results'" class="centered-flex billboard">
-            <h2>Final Leaderboard</h2>
-            <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
-                <div *ngIf="i < topAll.length">{{ i + 1 }}. {{ topAll[i].username }} ({{ topAll[i].score?.toFixed(2) }})</div>
-            </div>
-            <button
-                class="myButton"
-                mat-raised-button
-                (click)="onEnd()" 
-            >
-                End Game
-            </button>
-        </div>
+  <audio
+    autoplay
+    loop
+    src="https://www.chosic.com/wp-content/uploads/2021/12/Gjallar.mp3"
+  ></audio>
+  <div class="container">
+    <div *ngIf="state === 'error'">
+      <app-error-message [error]="error" />
     </div>
+    <div *ngIf="state === 'joining'" class="centered-flex billboard">
+      <p>connecting to quiz {{ quizId }}...</p>
+    </div>
+    <div *ngIf="state === 'start_wait'" class="centered-flex billboard">
+      <p>
+        about to start
+        <strong style="font-size: 2rem">{{ quiz!.title }}</strong>
+      </p>
+      <p>
+        to join: <strong style="font-size: 2rem">{{ quiz!.joinCode }}</strong>
+      </p>
+      <p>{{ students.length }} Connected Students:</p>
+      <div class="student-grid">
+        <span *ngFor="let s of students" class="student-capsule">
+          {{ s.username }}
+        </span>
+      </div>
+      <div>
+        <button class="myButton" mat-raised-button (click)="onStart()">
+          Start Game
+        </button>
+      </div>
+    </div>
+    <div
+      *ngIf="state === 'prompt'"
+      class="centered-flex billboard"
+      style="position: relative"
+    >
+      <app-timer
+        [max]="timerMax"
+        style="position: absolute; top: 0; left: 0; right: 0"
+      />
+      <p class="prompt">{{ currentQuestion?.prompt }}</p>
+    </div>
+    <div *ngIf="state === 'choices'" class="choices-wrapper">
+      <app-timer [max]="timerMax" />
+      <div class="four-grid billboard" style="margin-top: 30px">
+        <div class="choice blue-choice">A. {{ currentQuestion?.choiceA }}</div>
+        <div class="choice red-choice">B. {{ currentQuestion?.choiceB }}</div>
+        <div class="choice green-choice">C. {{ currentQuestion?.choiceC }}</div>
+        <div class="choice yellow-choice">
+          D. {{ currentQuestion?.choiceD }}
+        </div>
+      </div>
+    </div>
+    <div *ngIf="state === 'question_results'" class="centered-flex billboard">
+      <div *ngIf="topLast.length > 0">
+        top riser on last question: {{ topLast[0].username }} (+{{
+          topLast[0].lastPoints?.toFixed(2)
+        }})
+      </div>
+      <h2>Leaderboard</h2>
+      <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
+        <div *ngIf="i < topAll.length">
+          {{ i + 1 }}. {{ topAll[i].username }} ({{
+            topAll[i].score?.toFixed(2)
+          }})
+        </div>
+      </div>
+      <button class="myButton" mat-raised-button (click)="onNext()">
+        Next Question
+      </button>
+    </div>
+    <div *ngIf="state === 'overall_results'" class="centered-flex billboard">
+      <h2>Final Leaderboard</h2>
+      <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
+        <div *ngIf="i < topAll.length">
+          {{ i + 1 }}. {{ topAll[i].username }} ({{
+            topAll[i].score?.toFixed(2)
+          }})
+        </div>
+      </div>
+      <button class="myButton" mat-raised-button (click)="onEnd()">
+        End Game
+      </button>
+    </div>
+  </div>
 </div>
 
 <style>
-    h2 {
-        color: white;
-    }
+  h2 {
+    color: white;
+  }
 </style>
 <br />
 <h1>DEBUG</h1>
 <div *ngIf="DEBUG">
-    <h2>state: JOINING</h2>
-    <div class="screen-container">
-        <div class="container">
-            <div class="centered-flex billboard">
-                <p>connecting to quiz {{ 1 }}...</p>
-            </div>
-            
-        </div>
+  <h2>state: JOINING</h2>
+  <div class="screen-container">
+    <div class="container">
+      <div class="centered-flex billboard">
+        <p>connecting to quiz {{ 1 }}...</p>
+      </div>
     </div>
+  </div>
 
-    <br>
-    <h2>state: START_WAIT</h2>
-    <div class="screen-container">
-        <div class="container">
-            <div class="centered-flex billboard" style="width: 100%;">
-                <p>about to start <strong style="font-size: 2rem;">{{ debugData.quiz!.title }}</strong></p>
-                <p>to join: <strong style="font-size: 2rem;">{{ debugData.quiz!.joinCode }}</strong></p>
-                <p>{{ debugData.students.length }} Connected Students: </p>
-                <div class="student-grid">
-                    <span *ngFor="let s of debugData.students" class="student-capsule">
-                        {{ s.username }}
-                    </span>
-                </div>
-                <div>
-                    <button class="myButton" mat-raised-button>Start Game</button>
-                </div>
-            </div>
+  <br />
+  <h2>state: START_WAIT</h2>
+  <div class="screen-container">
+    <div class="container">
+      <div class="centered-flex billboard" style="width: 100%">
+        <p>
+          tart
+          <strong style="font-size: 2rem">{{ debugData.quiz!.title }}</strong>
+        </p>
+        <p>
+          to join:
+          <strong style="font-size: 2rem">{{
+            debugData.quiz!.joinCode
+          }}</strong>
+        </p>
+        <p>{{ debugData.students.length }} Connected Students:</p>
+        <div class="student-grid">
+          <span *ngFor="let s of debugData.students" class="student-capsule">
+            {{ s.username }}
+          </span>
         </div>
-    </div>
-            
-    <br>
-    <h2>state: PROMPT</h2>
-    <div class="screen-container">
-        <div class="container">
-            <div class="centered-flex billboard" style="position: relative;">
-                <app-timer [max]="debugData.timerMax" style="position: absolute; top:0; left: 0; right: 0;"/>
-                <p class="prompt">{{ debugData.currentQuestion.prompt }}</p>
-            </div>
+        <div>
+          <button class="myButton" mat-raised-button>Start Game</button>
         </div>
+      </div>
     </div>
+  </div>
 
-    <br>
-    <h2>state: CHOICES</h2>
-    <div class="screen-container">
-        <div class="container">
-            <div style="position: relative; width: 100%; height: calc(100% - 35px);">
-                <app-timer [max]="debugData.timerMax" />
-                <div class="four-grid billboard" style="margin-top: 30px;">
-                    <div class="choice blue-choice" style="position: relative;">
-                        A. {{ debugData.currentQuestion.choiceA }}
-                    </div>
-                    <div class="choice red-choice">B. {{ debugData.currentQuestion.choiceB }}</div>
-                    <div class="choice green-choice">C. {{ debugData.currentQuestion.choiceC }}</div>
-                    <div class="choice yellow-choice">D. {{ debugData.currentQuestion.choiceD }}</div>
-                </div>
-            </div>
-        </div>
+  <br />
+  <h2>state: PROMPT</h2>
+  <div class="screen-container">
+    <div class="container">
+      <div class="centered-flex billboard" style="position: relative">
+        <app-timer
+          [max]="debugData.timerMax"
+          style="position: absolute; top: 0; left: 0; right: 0"
+        />
+        <p class="prompt">{{ debugData.currentQuestion.prompt }}</p>
+      </div>
     </div>
-            
-    <br>
-    <h2>state: QUESTION_RESULTS</h2>
-    <div class="screen-container">
-        <div class="container">
-            <div class="centered-flex billboard">
-                <div *ngIf="debugData.topLast.length > 0">
-                    top riser on last question: {{ debugData.topLast[0].username }} (+{{ debugData.topLast[0].lastPoints }})
-                </div>
-                <h2>Leaderboard</h2>
-                <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
-                    <div *ngIf="i < debugData.topAll.length">{{ i + 1 }}. {{ debugData.topAll[i].username }} ({{ debugData.topAll[i].score }})</div>
-                </div>
-                <button
-                    class="myButton"
-                    mat-raised-button
-                >
-                    Next Question
-                </button>
-            </div>
+  </div>
+
+  <br />
+  <h2>state: CHOICES</h2>
+  <div class="screen-container">
+    <div class="container">
+      <div style="position: relative; width: 100%; height: calc(100% - 35px)">
+        <app-timer [max]="debugData.timerMax" />
+        <div class="four-grid billboard" style="margin-top: 30px">
+          <div class="choice blue-choice" style="position: relative">
+            A. {{ debugData.currentQuestion.choiceA }}
+          </div>
+          <div class="choice red-choice">
+            B. {{ debugData.currentQuestion.choiceB }}
+          </div>
+          <div class="choice green-choice">
+            C. {{ debugData.currentQuestion.choiceC }}
+          </div>
+          <div class="choice yellow-choice">
+            D. {{ debugData.currentQuestion.choiceD }}
+          </div>
         </div>
+      </div>
     </div>
-            
-    <br>
-    <h2>state: OVERAL_RESULTS</h2>
-    <div class="screen-container">
-        <div class="container">
-            <div class="centered-flex billboard">
-                <h2>Final Leaderboard</h2>
-                <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
-                    <div *ngIf="i < debugData.topAll.length">{{ i + 1 }}. {{ debugData.topAll[i].username }} ({{ debugData.topAll[i].score }})</div>
-                </div>
-                <button
-                    class="myButton"
-                    mat-raised-button
-                >
-                    End Game
-                </button>
-            </div>
+  </div>
+
+  <br />
+  <h2>state: QUESTION_RESULTS</h2>
+  <div class="screen-container">
+    <div class="container">
+      <div class="centered-flex billboard">
+        <div *ngIf="debugData.topLast.length > 0">
+          top riser on last question: {{ debugData.topLast[0].username }} (+{{
+            debugData.topLast[0].lastPoints
+          }})
         </div>
+        <h2>Leaderboard</h2>
+        <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
+          <div *ngIf="i < debugData.topAll.length">
+            {{ i + 1 }}. {{ debugData.topAll[i].username }} ({{
+              debugData.topAll[i].score
+            }})
+          </div>
+        </div>
+        <button class="myButton" mat-raised-button>Next Question</button>
+      </div>
     </div>
+  </div>
+
+  <br />
+  <h2>state: OVERAL_RESULTS</h2>
+  <div class="screen-container">
+    <div class="container">
+      <div class="centered-flex billboard">
+        <h2>Final Leaderboard</h2>
+        <div *ngFor="let i of [0, 1, 2]" class="leaderboard">
+          <div *ngIf="i < debugData.topAll.length">
+            {{ i + 1 }}. {{ debugData.topAll[i].username }} ({{
+              debugData.topAll[i].score
+            }})
+          </div>
+        </div>
+        <button class="myButton" mat-raised-button>End Game</button>
+      </div>
+    </div>
+  </div>
 </div>
