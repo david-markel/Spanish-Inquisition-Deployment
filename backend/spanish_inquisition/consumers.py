@@ -14,6 +14,7 @@ class QuizConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user = None
+        self.game_code = None
         self.redis = redis.Redis(host='localhost', port=6379, db=0)
 
     async def connect(self):
@@ -22,7 +23,8 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         print("[INFO] WebSocket disconnect called")
-        pass
+        if self.game_code is not None:
+            await self.channel_layer.group_discard(self.game_code, self.channel_name)
 
     async def receive(self, text_data):
         print(f"[INFO] Received data: {text_data}")
@@ -42,26 +44,26 @@ class QuizConsumer(AsyncWebsocketConsumer):
                     print("[INFO] Creating game...")
                     quiz = await self.get_quiz(payload.get('quizId'))
                     questions_serialized = await self.get_questions(quiz)
-                    game_code = str(uuid.uuid4())[:6] 
+                    self.game_code = str(uuid.uuid4())[:6] 
                     game_state = {
                         'quiz_id': payload.get('quiz_id'),
-                        'game_code': game_code,
+                        'game_code': self.game_code,
                         'owner': self.user.username,
                         'players': [{'username': self.user.username, 'score': 0}],
                         'questions': questions_serialized,
                         'question_idx': 0,
                         'game_state': 'start_wait',  # game is waiting for players to join
                     }
-                    self.set_game_state(game_code, game_state)
-                    print(f"[INFO] Game created with game code: {game_code}")
-                    game_state = self.get_game_state(game_code)
+                    self.set_game_state(self.game_code, game_state)
+                    print(f"[INFO] Game created with game code: {self.game_code}")
+                    game_state = self.get_game_state(self.game_code)
                     print("GAME STATE:", game_state)
                     # Modify this part to include Quiz object
                     quiz_obj = {
                         "id": quiz.id,
                         "title": quiz.title,
                         "isActive": quiz.is_active,  # assuming you have is_active field in your Quiz model
-                        "joinCode": game_code,
+                        "joinCode": self.game_code,
                         "owningTeacher": self.user.username,
                         "firstPlace": None,  # Assuming these fields are not set yet
                         "secondPlace": None,
@@ -69,20 +71,31 @@ class QuizConsumer(AsyncWebsocketConsumer):
                         "questions": questions_serialized,
                     }
                     await self.sendJson('connect-accept', {"quiz": quiz_obj})
+                    # Now that we have the game_code, let's join the group
+                    await self.channel_layer.group_add(self.game_code, self.channel_name)
 
                 elif self.user.user_type == 'student':
                     print("[INFO] Joining game...")
-                    game_code = payload.get('joinCode')
-                    print("WHAT IS MY GAME CODE? ", game_code)
+                    self.game_code = payload.get('joinCode')
+                    print("WHAT IS MY GAME CODE? ", self.game_code)
                     print("MY PAYLOAD? ", payload)
-                    game_state = self.get_game_state(game_code)
+                    game_state = self.get_game_state(self.game_code)
                     print("GAME STATE IN STUDENT:", game_state)
                     new_student = {'username': self.user.username, 'score': 0}  # Assuming score is initially 0 for all students
                     game_state['players'].append(new_student)  # Add the new player
-                    self.set_game_state(game_code, game_state)
-                    print(f"[INFO] Game joined with game code: {game_code}")
-                    await self.sendJson('student-connect', new_student)
-
+                    self.set_game_state(self.game_code, game_state)
+                    print(f"[INFO] Game joined with game code: {self.game_code}")
+                    await self.sendJson('connect-accept', new_student)
+                    # Send the 'student-connect' message to the group (which includes the teacher)
+                    await self.channel_layer.group_send(self.game_code, {
+                        'type': 'student.connect',
+                        'message': new_student
+                    })
+    
+    # Add a new handler for 'student.connect' type messages
+    async def student_connect(self, event):
+        # This will be received by the teacher's client
+        await self.sendJson('student-connect', event['message'])
 
     async def sendJson(self, m_type, payload):
         print(f"[INFO] Sending data: {m_type}, {payload}")
