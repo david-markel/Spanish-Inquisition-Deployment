@@ -197,7 +197,7 @@ export class ApiService {
   ): Promise<Response<Question>> {
     return await this.requestBase<Partial<NewQuestion>, Question>(
       'PUT',
-      `/questions/${id}`,
+      `/questions/${id}/`,
       { data: question, token }
     );
   }
@@ -205,7 +205,7 @@ export class ApiService {
   async deleteQuestion(token: string, id: number): Promise<Response<Question>> {
     return await this.requestBase<void, Question>(
       'DELETE',
-      `/questions/${id}`,
+      `/questions/${id}/`,
       { token }
     );
   }

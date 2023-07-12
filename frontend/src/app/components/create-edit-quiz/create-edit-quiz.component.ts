@@ -124,6 +124,9 @@ export class CreateEditQuizComponent {
 
     let success = true;
     for (const question of this.questions) {
+      // Add quizId to question before saving
+      question.quizId = this.quizId;
+
       let res;
       if (question.isNew) {
         console.log('Found token in save quiz : ', this.token);
