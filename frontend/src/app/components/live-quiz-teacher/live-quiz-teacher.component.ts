@@ -105,7 +105,7 @@ export class LiveQuizTeacherComponent
           break;
         }
       }
-    } else if (e_type === 'next-prompt') {
+    } else if (e_type === 'server-next-prompt') {
       this.state = LiveQuizState.PROMPT;
       const nextQuestionId = payload.questionId;
 
@@ -117,7 +117,7 @@ export class LiveQuizTeacherComponent
         () => this.socketService.sendJson('next-choices', null),
         this.timerMax
       );
-    } else if (e_type === 'next-choices') {
+    } else if (e_type === 'server-next-choices') {
       this.state = LiveQuizState.CHOICES;
 
       this.timerMax = (this.currentQuestion?.timeLimit || 0) * 1000;
@@ -125,7 +125,7 @@ export class LiveQuizTeacherComponent
         () => this.socketService.sendJson('next-results', null),
         this.timerMax
       );
-    } else if (e_type === 'next-results') {
+    } else if (e_type === 'server-next-results') {
       this.topAll = payload.topAll;
       this.topLast = payload.topLast;
       this.state = LiveQuizState.QUESTION_RESULTS;

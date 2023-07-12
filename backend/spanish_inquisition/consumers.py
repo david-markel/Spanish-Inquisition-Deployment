@@ -38,7 +38,6 @@ class QuizConsumer(AsyncWebsocketConsumer):
                 print("[INFO] Authentication failed")
                 await self.close()
             else:
-                print("USER DATA: ", self.user)
                 if self.user.user_type == 'teacher':
                     await self.handle_teacher_connect(payload)
                 elif self.user.user_type == 'student':
@@ -49,6 +48,15 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
         elif message_type == 'next-prompt':
             await self.handle_next_prompt()
+
+        elif message_type == 'next-choices':
+            await self.handle_next_choices()
+
+        elif message_type == 'next-results':
+            await self.handle_next_results()
+
+        elif message_type == 'submit-choice':
+            await self.handle_submit_choice(payload)
 
     async def handle_teacher_connect(self, payload):
         print("[INFO] Creating game...")
@@ -62,41 +70,36 @@ class QuizConsumer(AsyncWebsocketConsumer):
             'players': [{'username': self.user.username, 'score': 0}],
             'questions': questions_serialized,
             'question_idx': 0,
+            'question_sent_count': 0,
             'game_state': 'start_wait',  # game is waiting for players to join
         }
         self.set_game_state(self.game_code, game_state)
         print(f"[INFO] Game created with game code: {self.game_code}")
         game_state = self.get_game_state(self.game_code)
-        print("GAME STATE:", game_state)
-        # Modify this part to include Quiz object
         quiz_obj = {
             "id": quiz.id,
             "title": quiz.title,
-            "isActive": quiz.is_active,  # assuming you have is_active field in your Quiz model
+            "isActive": quiz.is_active,
             "joinCode": self.game_code,
             "owningTeacher": self.user.username,
-            "firstPlace": None,  # Assuming these fields are not set yet
+            "firstPlace": None, 
             "secondPlace": None,
             "thirdPlace": None,
             "questions": questions_serialized,
         }
         await self.sendJson('connect-accept', {"quiz": quiz_obj})
-        # Now that we have the game_code, let's join the group
         await self.channel_layer.group_add(self.game_code, self.channel_name)
 
     async def handle_student_connect(self, payload):
         print("[INFO] Joining game...")
         self.game_code = payload.get('joinCode')
-        print("WHAT IS MY GAME CODE? ", self.game_code)
-        print("MY PAYLOAD? ", payload)
         game_state = self.get_game_state(self.game_code)
-        print("GAME STATE IN STUDENT:", game_state)
-        new_student = {'username': self.user.username, 'score': 0}  # Assuming score is initially 0 for all students
-        game_state['players'].append(new_student)  # Add the new player
+        new_student = {'username': self.user.username, 'score': 0}
+        game_state['players'].append(new_student)  
         self.set_game_state(self.game_code, game_state)
         print(f"[INFO] Game joined with game code: {self.game_code}")
         await self.sendJson('connect-accept', new_student)
-        # Send the 'student-connect' message to the group (which includes the teacher)
+        await self.channel_layer.group_add(self.game_code, self.channel_name)
         await self.channel_layer.group_send(self.game_code, {
             'type': 'student.connect',
             'message': new_student
@@ -104,67 +107,94 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
     async def handle_start_game(self, payload):
         game_state = self.get_game_state(self.game_code)
-        
-        # Check if the user trying to start the game is the owner
         if game_state and game_state['owner'] == self.user.username:
-            game_state['game_state'] = 'game_started'  # Change the game_state to 'game_started'
-            self.set_game_state(self.game_code, game_state)  # Store the updated game state in Redis
-
-            # Broadcast to all group members that the game has started
+            game_state['game_state'] = 'game_started'  
+            self.set_game_state(self.game_code, game_state)  
             await self.channel_layer.group_send(self.game_code, {
                 'type': 'game.started',
                 'message': {}
             })
-
-            # Send a 'game-started' message to the user (owner)
             await self.sendJson('game-started', {})
         else:
-            # If not the owner, send an error message
             await self.sendJson('error', {'message': 'Must be the teacher to start the game.'})
-            await self.close(code=4001)  # Close the connection with a policy violation code
+            await self.close(code=4001) 
 
     async def handle_next_prompt(self):
         game_state = self.get_game_state(self.game_code)
         print("[INFO] Next Prompt...")
-        
-        # Increment the question index
-        game_state['question_idx'] += 1
-
-        print("Question index: ", game_state['question_idx'])
-        print("Number of questions: ", len(game_state['questions']))
-
-
-        # Fetch the next question
         next_question = game_state['questions'][game_state['question_idx']]
-        
-        # Set the game state back to the server
-        self.set_game_state(self.game_code, game_state)
-        
-        # Prepare the payload to be sent to the frontend
         payload = {'questionId': next_question['id']}
-        
-        # Send the next-prompt message to the group (which includes the teacher and the students)
         await self.channel_layer.group_send(self.game_code, {
-            'type': 'next-prompt',
+            'type': 'server.next.prompt',
             'message': payload
         })
+        game_state['question_sent_count'] += 1
+        if game_state['question_sent_count'] >= len(game_state['players']):
+            game_state['question_sent_count'] = 0
+            game_state['question_idx'] += 1
+        self.set_game_state(self.game_code, game_state)
+        
 
-    # Add a new handler for 'game.started' type messages
-    async def game_started(self, event):
-        # This will be received by all members of the group (including the owner)
-        await self.sendJson('game-started', event['message'])
-    
-    # Add a new handler for 'student.connect' type messages
-    async def student_connect(self, event):
-        # This will be received by the teacher's client
-        await self.sendJson('student-connect', event['message'])
+    async def handle_next_choices(self):
+        await self.channel_layer.group_send(self.game_code, {
+            'type': 'server.next.choices',
+            'message': {}
+        })
+
+
+    async def handle_next_results(self):
+        player_scores = self.get_player_scores()
+        top_all = list(player_scores.keys())[:5]
+        top_last = top_all
+        payload = {
+            'topAll': top_all,
+            'topLast': top_last,
+        }
+
+        await self.sendJson('server-next-results', payload)
+
+
+    async def handle_submit_choice(self, payload):
+        current_question = self.get_current_question()
+        if payload["choice"] != current_question["correctAnswer"]:
+            await self.sendJson('choice-result', {
+                "correct": False,
+            })
+            self.update_player_score(self.username, 0)
+            return
+
+        MAX_POINTS = 1000
+        time_limit_millis = current_question["timeLimit"] * 1000
+        percent_taken = 1 - (payload["millisTaken"] / time_limit_millis) 
+        points = MAX_POINTS * percent_taken
+        self.update_player_score(self.username, points)
+        await self.sendJson('choice-result', {
+            "correct": True,
+            "points": points,
+        })
+
+
+    def get_current_question(self):
+        game_state = self.get_game_state(self.game_code)
+        question_idx = game_state['question_idx']
+        question = game_state['questions'][question_idx]
+
+        return question
+
+    def update_player_score(self, username, points):
+        game_state = self.get_game_state(self.game_code)
+        player = next((player for player in game_state['players'] if player['username'] == username), None)
+        if player:
+            player['score'] += points
+        self.set_game_state(self.game_code, game_state)
+
 
     async def sendJson(self, m_type, payload):
         print(f"[INFO] Sending data: {m_type}, {payload}")
         await self.send(text_data=json.dumps({
             'type': m_type,
             'payload': payload
-        }))
+            }))
 
     async def authenticate(self, query_string):
         from .authentication import JWTAuthentication
@@ -179,7 +209,6 @@ class QuizConsumer(AsyncWebsocketConsumer):
             if not token:
                 print(f"[ERROR] Token not found in query string")
                 return None, None
-            # print(f"[INFO] Token extracted: {token}")
             return authenticator.authenticate(token)
         except get_user_model().DoesNotExist as e:
             print(f"[ERROR] Exception in get_user: {str(e)}")
@@ -195,13 +224,32 @@ class QuizConsumer(AsyncWebsocketConsumer):
         return QuestionSerializer(questions, many=True).data
     
     def get_game_state(self, game_code):
-        # Fetch the game state from Redis
         game_state_str = self.redis.get(game_code)
         if game_state_str:
             return json.loads(game_state_str)
         return None
 
     def set_game_state(self, game_code, game_state):
-        # Store the game state in Redis
         self.redis.set(game_code, json.dumps(game_state))
+
+    def get_player_scores(self):
+        players = self.redis_client.hgetall(self.game_code)
+        player_scores = {username: int(score) for username, score in players.items()}
+
+        return player_scores
+    async def game_started(self, event):
+        await self.sendJson('game-started', event['message'])
+    
+    async def student_connect(self, event):
+        await self.sendJson('student-connect', event['message'])
+
+    async def server_next_prompt(self, event):
+        await self.sendJson('server-next-prompt', event['message'])
+
+    async def server_next_choices(self, event):
+        await self.sendJson('server-next-choices', event['message'])
+
+    async def server_next_results(self, event):
+        await self.sendJson('server-next-results', event['message'])
+
 

@@ -1,15 +1,26 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { SocketService, MessageType, ConnectPayload, SocketListener, CreateSocketConfig } from '../../services/socket.service';
+import {
+  SocketService,
+  MessageType,
+  ConnectPayload,
+  SocketListener,
+  CreateSocketConfig,
+} from '../../services/socket.service';
 import { LiveQuizState } from '../live-quiz/live-quiz.component';
 
 @Component({
   selector: 'app-live-quiz-student',
   templateUrl: './live-quiz-student.component.html',
-  styleUrls: ['./live-quiz-student.component.scss', '../../shared/live-quiz.scss']
+  styleUrls: [
+    './live-quiz-student.component.scss',
+    '../../shared/live-quiz.scss',
+  ],
 })
-export class LiveQuizStudentComponent implements OnInit, OnDestroy, SocketListener {
+export class LiveQuizStudentComponent
+  implements OnInit, OnDestroy, SocketListener
+{
   state: LiveQuizState = LiveQuizState.JOINING;
   @Input() joinCode!: string;
   error: string | null;
@@ -33,7 +44,7 @@ export class LiveQuizStudentComponent implements OnInit, OnDestroy, SocketListen
   ngOnInit() {
     // connect!
     const connectPayload: ConnectPayload = {
-      token: sessionStorage.getItem("token")!,
+      token: sessionStorage.getItem('token')!,
       joinCode: this.joinCode,
     };
 
@@ -42,7 +53,9 @@ export class LiveQuizStudentComponent implements OnInit, OnDestroy, SocketListen
       listener: this,
     };
 
-    this.socketSubscription = this.socketService.createSocket(socketConfig).subscribe();
+    this.socketSubscription = this.socketService
+      .createSocket(socketConfig)
+      .subscribe();
   }
 
   ngOnDestroy(): void {
@@ -54,28 +67,24 @@ export class LiveQuizStudentComponent implements OnInit, OnDestroy, SocketListen
 
   onGoBack(): void {
     this.socketService.closeSocket();
-    this.router.navigate(["join-or-create"]);
+    this.router.navigate(['join-or-create']);
   }
 
   onMessage(e_type: MessageType, payload: any): void {
+    console.log('student messsage received from server: ', payload);
     if (e_type === 'connect-accept') {
       this.state = LiveQuizState.START_WAIT;
-    }
-    else if (e_type === 'next-prompt') {
+    } else if (e_type === 'server-next-prompt') {
       this.state = LiveQuizState.PROMPT;
-    }
-    else if (e_type === 'next-choices') {
+    } else if (e_type === 'server-next-choices') {
       this.state = LiveQuizState.CHOICES;
       this.questionStart = Date.now();
-    }
-    else if (e_type === 'next-results') {
+    } else if (e_type === 'server-next-results') {
       this.state = LiveQuizState.QUESTION_RESULTS;
-    }
-    else if (e_type === 'final-results') {
+    } else if (e_type === 'final-results') {
       this.state = LiveQuizState.OVERALL_RESULTS;
-    }
-    else if (e_type === "choice-result") {
-      this.wasCorrect = payload.correct; 
+    } else if (e_type === 'choice-result') {
+      this.wasCorrect = payload.correct;
 
       if (this.wasCorrect) {
         this.lastPoints = payload.points;
@@ -93,9 +102,9 @@ export class LiveQuizStudentComponent implements OnInit, OnDestroy, SocketListen
 
   onChoice(choice: 'a' | 'b' | 'c' | 'd') {
     const now = Date.now();
-    const delta = (now - this.questionStart);
+    const delta = now - this.questionStart;
 
-    this.socketService.sendJson("submit-choice", {
+    this.socketService.sendJson('submit-choice', {
       choice,
       millisTaken: delta,
     });
@@ -103,4 +112,3 @@ export class LiveQuizStudentComponent implements OnInit, OnDestroy, SocketListen
     this.state = LiveQuizState.RESULTS_WAIT;
   }
 }
-
