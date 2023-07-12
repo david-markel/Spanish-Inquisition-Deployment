@@ -71,7 +71,7 @@ class QuizConsumer(AsyncWebsocketConsumer):
             'questions': questions_serialized,
             'question_idx': 0,
             'question_sent_count': 0,
-            'game_state': 'start_wait',  # game is waiting for players to join
+            'game_state': 'start_wait',
         }
         self.set_game_state(self.game_code, game_state)
         print(f"[INFO] Game created with game code: {self.game_code}")
@@ -127,13 +127,7 @@ class QuizConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_send(self.game_code, {
             'type': 'server.next.prompt',
             'message': payload
-        })
-        game_state['question_sent_count'] += 1
-        if game_state['question_sent_count'] >= len(game_state['players']):
-            game_state['question_sent_count'] = 0
-            game_state['question_idx'] += 1
-        self.set_game_state(self.game_code, game_state)
-        
+        })    
 
     async def handle_next_choices(self):
         await self.channel_layer.group_send(self.game_code, {
@@ -143,7 +137,8 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
 
     async def handle_next_results(self):
-        player_scores = self.get_player_scores()
+        player_scores = await self.get_player_scores()
+        print("PLAYER SCORES: ", player_scores)
         top_all = list(player_scores.keys())[:5]
         top_last = top_all
         payload = {
@@ -151,23 +146,33 @@ class QuizConsumer(AsyncWebsocketConsumer):
             'topLast': top_last,
         }
 
-        await self.sendJson('server-next-results', payload)
+        # await self.sendJson('server-next-results', payload)
+        await self.channel_layer.group_send(self.game_code, {
+            'type': 'server.next.results',
+            'message': payload
+        })
+
+        game_state = self.get_game_state(self.game_code)
+        game_state['question_idx'] += 1
+        self.set_game_state(self.game_code, game_state)
+
 
 
     async def handle_submit_choice(self, payload):
         current_question = self.get_current_question()
-        if payload["choice"] != current_question["correctAnswer"]:
+        print("current question: ", current_question)
+        if payload["choice"] != current_question["correctChoice"]:
             await self.sendJson('choice-result', {
                 "correct": False,
             })
-            self.update_player_score(self.username, 0)
+            self.update_player_score(self.user.username, 0)
             return
 
         MAX_POINTS = 1000
         time_limit_millis = current_question["timeLimit"] * 1000
         percent_taken = 1 - (payload["millisTaken"] / time_limit_millis) 
         points = MAX_POINTS * percent_taken
-        self.update_player_score(self.username, points)
+        self.update_player_score(self.user.username, points)
         await self.sendJson('choice-result', {
             "correct": True,
             "points": points,
@@ -180,6 +185,18 @@ class QuizConsumer(AsyncWebsocketConsumer):
         question = game_state['questions'][question_idx]
 
         return question
+    
+    async def get_player_scores(self):
+        game_state = self.get_game_state(self.game_code)
+        if not game_state:
+            return None
+
+        player_scores = {}
+        for player in game_state['players']:
+            player_scores[player['username']] = player['score']
+        
+        return player_scores
+
 
     def update_player_score(self, username, points):
         game_state = self.get_game_state(self.game_code)
@@ -232,11 +249,6 @@ class QuizConsumer(AsyncWebsocketConsumer):
     def set_game_state(self, game_code, game_state):
         self.redis.set(game_code, json.dumps(game_state))
 
-    def get_player_scores(self):
-        players = self.redis_client.hgetall(self.game_code)
-        player_scores = {username: int(score) for username, score in players.items()}
-
-        return player_scores
     async def game_started(self, event):
         await self.sendJson('game-started', event['message'])
     
