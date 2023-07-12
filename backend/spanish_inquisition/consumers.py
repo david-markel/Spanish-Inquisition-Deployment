@@ -37,12 +37,12 @@ class QuizConsumer(AsyncWebsocketConsumer):
                 await self.close()
             else:
                 print("USER DATA: ", self.user)
-                if self.user.user_type == 'teacher':  # assuming you have an 'is_teacher' attribute
+                if self.user.user_type == 'teacher':
                     # If a teacher connects, we create a game
                     print("[INFO] Creating game...")
                     quiz = await self.get_quiz(payload.get('quizId'))
                     questions_serialized = await self.get_questions(quiz)
-                    game_code = str(uuid.uuid4())[:6]  # Generate a unique game code, use only first 6 characters
+                    game_code = str(uuid.uuid4())[:6] 
                     game_state = {
                         'quiz_id': payload.get('quiz_id'),
                         'game_code': game_code,
@@ -52,8 +52,10 @@ class QuizConsumer(AsyncWebsocketConsumer):
                         'question_idx': 0,
                         'game_state': 'start_wait',  # game is waiting for players to join
                     }
-                    self.redis.set(game_code, json.dumps(game_state))  # Store the game state in Redis
+                    self.set_game_state(game_code, game_state)
                     print(f"[INFO] Game created with game code: {game_code}")
+                    game_state = self.get_game_state(game_code)
+                    print("GAME STATE:", game_state)
                     # Modify this part to include Quiz object
                     quiz_obj = {
                         "id": quiz.id,
@@ -67,26 +69,19 @@ class QuizConsumer(AsyncWebsocketConsumer):
                         "questions": questions_serialized,
                     }
                     await self.sendJson('connect-accept', {"quiz": quiz_obj})
-                else:
-                    await self.sendJson('connect-accept', {'message': 'Connected successfully!'})
 
-        elif message_type == 'start-game':
-            print("[INFO] Starting quiz...")
-            game_code = payload.get('game_code')
-            game_state = json.loads(self.redis.get(game_code))  # Fetch the game state from Redis
-            game_state['game_state'] = 'in_progress'  # Update the game state
-            self.redis.set(game_code, json.dumps(game_state))  # Update the game state in Redis
-            print(f"[INFO] Quiz started with game code: {game_code}")
-            await self.sendJson('quiz-started', {'game_code': game_code})
-
-        elif message_type == 'student-connect':
-            print("[INFO] Joining game...")
-            game_code = payload.get('game_code')
-            game_state = json.loads(self.redis.get(game_code))  # Fetch the game state from Redis
-            game_state['players'].append({'username': self.user.username, 'score': 0})  # Add the new player
-            self.redis.set(game_code, json.dumps(game_state))  # Update the game state in Redis
-            print(f"[INFO] Game joined with game code: {game_code}")
-            await self.sendJson('game-joined', {'game_code': game_code})
+                elif self.user.user_type == 'student':
+                    print("[INFO] Joining game...")
+                    game_code = payload.get('joinCode')
+                    print("WHAT IS MY GAME CODE? ", game_code)
+                    print("MY PAYLOAD? ", payload)
+                    game_state = self.get_game_state(game_code)
+                    print("GAME STATE IN STUDENT:", game_state)
+                    new_student = {'username': self.user.username, 'score': 0}  # Assuming score is initially 0 for all students
+                    game_state['players'].append(new_student)  # Add the new player
+                    self.set_game_state(game_code, game_state)
+                    print(f"[INFO] Game joined with game code: {game_code}")
+                    await self.sendJson('student-connect', new_student)
 
 
     async def sendJson(self, m_type, payload):
@@ -97,7 +92,6 @@ class QuizConsumer(AsyncWebsocketConsumer):
         }))
 
     async def authenticate(self, query_string):
-        # print(f"[INFO] Query string received: {query_string}")
         from .authentication import JWTAuthentication
         authenticator = JWTAuthentication()
         user, _ = await self.get_user(query_string, authenticator)
@@ -124,4 +118,15 @@ class QuizConsumer(AsyncWebsocketConsumer):
     def get_questions(self, quiz):
         questions = Question.objects.filter(quiz=quiz).all()
         return QuestionSerializer(questions, many=True).data
+    
+    def get_game_state(self, game_code):
+        # Fetch the game state from Redis
+        game_state_str = self.redis.get(game_code)
+        if game_state_str:
+            return json.loads(game_state_str)
+        return None
+
+    def set_game_state(self, game_code, game_state):
+        # Store the game state in Redis
+        self.redis.set(game_code, json.dumps(game_state))
 
