@@ -67,11 +67,11 @@ class QuizConsumer(AsyncWebsocketConsumer):
             'quiz_id': payload.get('quiz_id'),
             'game_code': self.game_code,
             'owner': self.user.username,
-            'players': [{'username': self.user.username, 'score': 0}],
+            'players': [],
             'questions': questions_serialized,
             'question_idx': 0,
-            'question_sent_count': 0,
             'game_state': 'start_wait',
+            'question_incremented': False,
         }
         self.set_game_state(self.game_code, game_state)
         print(f"[INFO] Game created with game code: {self.game_code}")
@@ -128,6 +128,8 @@ class QuizConsumer(AsyncWebsocketConsumer):
             'type': 'server.next.prompt',
             'message': payload
         })    
+        game_state['question_incremented'] = False
+        self.set_game_state(self.game_code, game_state)
 
     async def handle_next_choices(self):
         await self.channel_layer.group_send(self.game_code, {
@@ -139,22 +141,25 @@ class QuizConsumer(AsyncWebsocketConsumer):
     async def handle_next_results(self):
         player_scores = await self.get_player_scores()
         print("PLAYER SCORES: ", player_scores)
-        top_all = list(player_scores.keys())[:5]
+        # Create a list of dictionaries where each dictionary has username and score as keys
+        top_all = [{'username': player, 'score': score} for player, score in player_scores.items()][:5]
         top_last = top_all
         payload = {
             'topAll': top_all,
             'topLast': top_last,
-        }
+    }
 
-        # await self.sendJson('server-next-results', payload)
         await self.channel_layer.group_send(self.game_code, {
             'type': 'server.next.results',
             'message': payload
         })
 
         game_state = self.get_game_state(self.game_code)
-        game_state['question_idx'] += 1
-        self.set_game_state(self.game_code, game_state)
+        if not game_state['question_incremented']:
+            game_state['question_idx'] += 1
+            game_state['question_incremented'] = True
+            self.set_game_state(self.game_code, game_state)
+
 
 
 
