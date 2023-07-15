@@ -9,11 +9,14 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 # Install dependencies
-COPY ./backend/requirements.txt /app/requirements.txt
+COPY ./requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt
 
 # Copy project
-COPY ./backend /app
+COPY . /app
+
+# Set PYTHONPATH
+ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Run the application
-CMD ["daphne", "backend.asgi:application"]
+CMD ["daphne", "-u", "/tmp/daphne.sock", "backend.asgi:application"]

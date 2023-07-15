@@ -2,9 +2,9 @@ version: "3.8"
 
 services:
   backend:
-    build: ./path_to_django_backend/
+    build: ./backend/
     volumes:
-      - ./path_to_django_backend/:/app/
+      - ./backend/:/app/
     ports:
       - 8000:8000
     depends_on:
@@ -20,7 +20,7 @@ services:
       - REDIS_PORT=6379
 
   frontend:
-    build: ./path_to_angular_frontend/
+    build: ./frontend/
     ports:
       - 4200:80
     depends_on:
