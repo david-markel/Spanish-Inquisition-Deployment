@@ -56,7 +56,7 @@
     <div *ngIf="state === 'question_results'" class="centered-flex billboard">
       <div *ngIf="topLast.length > 0">
         top riser on last question: {{ topLast[0].username }} (+{{
-          topLast[0].lastPoints?.toFixed(2)
+          topLast[0].previous_score?.toFixed(2)
         }})
       </div>
       <h2>Leaderboard</h2>

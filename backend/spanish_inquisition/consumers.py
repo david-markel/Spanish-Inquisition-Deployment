@@ -72,6 +72,7 @@ class QuizConsumer(AsyncWebsocketConsumer):
             'question_idx': 0,
             'game_state': 'start_wait',
             'question_incremented': False,
+            'total_questions': len(questions_serialized)
         }
         self.set_game_state(self.game_code, game_state)
         print(f"[INFO] Game created with game code: {self.game_code}")
@@ -94,7 +95,11 @@ class QuizConsumer(AsyncWebsocketConsumer):
         print("[INFO] Joining game...")
         self.game_code = payload.get('joinCode')
         game_state = self.get_game_state(self.game_code)
-        new_student = {'username': self.user.username, 'score': 0}
+        new_student = {
+            'username': self.user.username, 
+            'score': 0, 
+            'previous_score': 0
+        }
         game_state['players'].append(new_student)  
         self.set_game_state(self.game_code, game_state)
         print(f"[INFO] Game joined with game code: {self.game_code}")
@@ -121,15 +126,26 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
     async def handle_next_prompt(self):
         game_state = self.get_game_state(self.game_code)
+        message_type = 'server.next.prompt'
         print("[INFO] Next Prompt...")
-        next_question = game_state['questions'][game_state['question_idx']]
-        payload = {'questionId': next_question['id']}
+
+        if game_state['question_idx'] >= game_state['total_questions']:
+            message_type = 'final.results'
+            player_scores = await self.get_player_scores()
+            top_all = [{'username': player, 'score': score['score'], 'previous_score': score['previous_score']} for player, score in player_scores.items()][:5]
+            payload = {
+                'topAll': top_all
+            }
+        else:
+            next_question = game_state['questions'][game_state['question_idx']]
+            payload = {'questionId': next_question['id']}
+            game_state['question_incremented'] = False
+            self.set_game_state(self.game_code, game_state)
+
         await self.channel_layer.group_send(self.game_code, {
-            'type': 'server.next.prompt',
+            'type': message_type,
             'message': payload
         })    
-        game_state['question_incremented'] = False
-        self.set_game_state(self.game_code, game_state)
 
     async def handle_next_choices(self):
         await self.channel_layer.group_send(self.game_code, {
@@ -141,26 +157,24 @@ class QuizConsumer(AsyncWebsocketConsumer):
     async def handle_next_results(self):
         player_scores = await self.get_player_scores()
         print("PLAYER SCORES: ", player_scores)
-        # Create a list of dictionaries where each dictionary has username and score as keys
-        top_all = [{'username': player, 'score': score} for player, score in player_scores.items()][:5]
-        top_last = top_all
+        top_all = [{'username': player, 'score': score['score'], 'previous_score': score['previous_score']} for player, score in player_scores.items()][:5]
+        top_last = sorted(top_all, key=lambda player: player['previous_score'], reverse=True)
         payload = {
             'topAll': top_all,
             'topLast': top_last,
-    }
-
-        await self.channel_layer.group_send(self.game_code, {
-            'type': 'server.next.results',
-            'message': payload
-        })
+        }
 
         game_state = self.get_game_state(self.game_code)
+        message_type = 'server.next.results'
         if not game_state['question_incremented']:
             game_state['question_idx'] += 1
             game_state['question_incremented'] = True
             self.set_game_state(self.game_code, game_state)
 
-
+        await self.channel_layer.group_send(self.game_code, {
+            'type': message_type,
+            'message': payload
+        })
 
 
     async def handle_submit_choice(self, payload):
@@ -198,7 +212,7 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
         player_scores = {}
         for player in game_state['players']:
-            player_scores[player['username']] = player['score']
+            player_scores[player['username']] = {'score': player['score'], 'previous_score': player['previous_score']}
         
         return player_scores
 
@@ -207,8 +221,10 @@ class QuizConsumer(AsyncWebsocketConsumer):
         game_state = self.get_game_state(self.game_code)
         player = next((player for player in game_state['players'] if player['username'] == username), None)
         if player:
+            player['previous_score'] = player['score']
             player['score'] += points
         self.set_game_state(self.game_code, game_state)
+
 
 
     async def sendJson(self, m_type, payload):
@@ -268,5 +284,8 @@ class QuizConsumer(AsyncWebsocketConsumer):
 
     async def server_next_results(self, event):
         await self.sendJson('server-next-results', event['message'])
+
+    async def final_results(self, event):
+        await self.sendJson('final-results', event['message'])
 
 

@@ -15,7 +15,7 @@ import { debugData } from './debugData';
 type Student = {
   username: string;
   score?: number;
-  lastPoints?: number;
+  previous_score?: number;
 };
 
 @Component({
