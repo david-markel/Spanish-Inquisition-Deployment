@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./path_to_django_backend/
+    volumes:
+      - ./path_to_django_backend/:/app/
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_NAME=spanish_inquisition
+      - DATABASE_USER=postgres
+      - DATABASE_PASSWORD=admin
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  frontend:
+    build: ./path_to_angular_frontend/
+    ports:
+      - 4200:80
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=spanish_inquisition
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+
+volumes:
+  postgres_data:
