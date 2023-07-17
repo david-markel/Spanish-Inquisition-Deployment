@@ -5,10 +5,10 @@ import axios, { AxiosError, AxiosRequestConfig } from 'axios';
 // TYPES
 // *****************
 type UserBase = {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   username: string;
-  userType: string; //"teacher" | "student",
+  user_type: string; //"teacher" | "student",
 };
 
 export type NewUser = UserBase & { password: string };
@@ -51,7 +51,7 @@ export type Response<T> = {
 };
 
 // base URL for all API endpoints
-const BASE_URL = 'http://localhost:8000/api'; // "/api"
+const BASE_URL = 'http://localhost:8000/api';
 
 // allowed HTTP methods
 type Method = 'POST' | 'GET' | 'PUT' | 'DELETE';

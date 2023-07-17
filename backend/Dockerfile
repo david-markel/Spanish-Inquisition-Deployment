@@ -19,4 +19,5 @@ COPY . /app
 ENV PYTHONPATH=/app:$PYTHONPATH
 
 # Run the application
-CMD ["daphne", "-u", "/tmp/daphne.sock", "backend.asgi:application"]
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "backend.asgi:application"]
+

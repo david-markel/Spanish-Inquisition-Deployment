@@ -8,6 +8,7 @@ services:
     depends_on:
       - db
       - redis
+    command: bash -c "python manage.py wait_for_db && python manage.py migrate && daphne -b 0.0.0.0 -p 8000 backend.asgi:application"
     environment:
       - DATABASE_NAME=spanish_inquisition
       - DATABASE_USER=postgres

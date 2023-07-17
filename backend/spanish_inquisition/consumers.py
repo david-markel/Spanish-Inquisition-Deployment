@@ -15,7 +15,9 @@ class QuizConsumer(AsyncWebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.user = None
         self.game_code = None
-        self.redis = redis.Redis(host='localhost', port=6379, db=0)
+        # self.redis = redis.Redis(host='localhost', port=6379, db=0)
+        self.redis = redis.Redis(host='redis', port=6379, db=0)
+
 
     async def connect(self):
         print("[INFO] WebSocket connect called")
